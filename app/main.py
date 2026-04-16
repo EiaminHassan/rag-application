@@ -3,8 +3,16 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 
 import streamlit as st
+
+# Allow launching via either:
+# - streamlit run app/main.py (repo root)
+# - cd app && streamlit run main.py
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.config.settings import DATA_RAW_DIR
 from app.pipeline.rag_pipeline import RAGPipeline
