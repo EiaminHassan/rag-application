@@ -1,14 +1,14 @@
-# Groq + FAISS RAG Application
+# Gemini + FAISS RAG Application
 
 A Python RAG starter that combines:
 - **Retrieval**: Sentence Transformers embeddings + FAISS
-- **Generation**: Groq-hosted LLMs (default: `llama3-8b-8192`)
+- **Generation**: Google Gemini API (default: `gemini-2.0-flash`)
 - **UI**: Streamlit
 
 ## Tech Stack
 - Python
 - Streamlit
-- Groq API (`groq` SDK)
+- Gemini API (`google-genai` SDK)
 - `sentence-transformers` (`all-MiniLM-L6-v2`)
 - FAISS (`faiss-cpu`)
 - PDF parsing (`pdfplumber` with `PyPDF2` fallback)
@@ -23,7 +23,7 @@ RAG-APPLICATION/
 │   ├── embeddings/embedder.py
 │   ├── vectorstore/faiss_store.py
 │   ├── retriever/retriever.py
-│   ├── llm/groq_client.py
+│   ├── llm/gemini_client.py
 │   ├── pipeline/rag_pipeline.py
 │   └── utils/logger.py
 ├── data/{raw,processed}
@@ -37,9 +37,8 @@ RAG-APPLICATION/
 ## Setup
 1. Create/update `.env`:
    ```env
-   GROQ_API_KEY=your_groq_api_key_here
-   GROQ_MODEL=llama3-8b-8192
-   GROQ_FALLBACK_MODEL=mixtral-8x7b-32768
+   GEMINI_API_KEY=your_gemini_api_key_here
+   GEMINI_MODEL=gemini-2.0-flash
    EMBEDDING_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
    CHUNK_SIZE=1000
    CHUNK_OVERLAP=200

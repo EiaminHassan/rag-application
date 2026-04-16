@@ -25,9 +25,8 @@ def _clean_env(value: str) -> str:
 class Settings:
     """Runtime configuration values."""
 
-    groq_api_key: str
-    groq_model: str = "llama3-8b-8192"
-    fallback_model: str = "mixtral-8x7b-32768"
+    gemini_api_key: str
+    gemini_model: str = "gemini-2.0-flash"
     embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
     chunk_size: int = 1000
     chunk_overlap: int = 200
@@ -37,9 +36,8 @@ class Settings:
     def from_env(cls) -> "Settings":
         """Build settings from environment variables."""
         return cls(
-            groq_api_key=_clean_env(os.getenv("GROQ_API_KEY", "")),
-            groq_model=_clean_env(os.getenv("GROQ_MODEL", "llama3-8b-8192")),
-            fallback_model=_clean_env(os.getenv("GROQ_FALLBACK_MODEL", "mixtral-8x7b-32768")),
+            gemini_api_key=_clean_env(os.getenv("GEMINI_API_KEY", "")),
+            gemini_model=_clean_env(os.getenv("GEMINI_MODEL", "gemini-2.0-flash")),
             embedding_model_name=_clean_env(os.getenv(
                 "EMBEDDING_MODEL_NAME",
                 "sentence-transformers/all-MiniLM-L6-v2",

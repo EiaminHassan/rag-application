@@ -15,12 +15,12 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.config.settings import DATA_RAW_DIR, Settings
-from app.llm.groq_client import validate_groq_api_key
+from app.llm.gemini_client import validate_gemini_api_key
 from app.pipeline.rag_pipeline import RAGPipeline
 
 
-st.set_page_config(page_title="Groq + FAISS RAG", page_icon="📄", layout="wide")
-st.title("Groq + FAISS RAG Application")
+st.set_page_config(page_title="Gemini + FAISS RAG", page_icon="📄", layout="wide")
+st.title("Gemini + FAISS RAG Application")
 
 
 def save_uploaded_files(uploaded_files: list) -> list[Path]:
@@ -35,8 +35,11 @@ def save_uploaded_files(uploaded_files: list) -> list[Path]:
 
 settings = Settings.from_env()
 
-if "groq_key_status" not in st.session_state:
-    st.session_state.groq_key_status = validate_groq_api_key(settings.groq_api_key)
+if "gemini_key_status" not in st.session_state:
+    st.session_state.gemini_key_status = validate_gemini_api_key(
+        settings.gemini_api_key,
+        settings.gemini_model,
+    )
 
 if "pipeline" not in st.session_state:
     try:
@@ -46,10 +49,10 @@ if "pipeline" not in st.session_state:
         st.session_state.pipeline_error = str(exc)
 
 pipeline: RAGPipeline | None = st.session_state.pipeline
-is_key_valid, key_message = st.session_state.groq_key_status
+is_key_valid, key_message = st.session_state.gemini_key_status
 
 with st.sidebar:
-    st.subheader("Groq API Status")
+    st.subheader("Gemini API Status")
     if is_key_valid:
         st.success(key_message)
     else:
@@ -77,7 +80,7 @@ with st.sidebar:
             if "pipeline_error" in st.session_state:
                 st.caption(st.session_state.pipeline_error)
         elif not is_key_valid:
-            st.error("Cannot proceed: GROQ_API_KEY is missing/invalid.")
+            st.error("Cannot proceed: GEMINI_API_KEY is missing/invalid.")
         else:
             try:
                 pipeline.load_index()
@@ -92,7 +95,7 @@ if st.button("Get Answer", type="primary", disabled=not is_key_valid):
     if not question.strip():
         st.warning("Please enter a question.")
     elif not is_key_valid:
-        st.error("GROQ_API_KEY is missing/invalid. Fix .env and restart Streamlit.")
+        st.error("GEMINI_API_KEY is missing/invalid. Fix .env and restart Streamlit.")
     elif pipeline is None:
         st.error("Pipeline failed to initialize. Check your .env configuration.")
         if "pipeline_error" in st.session_state:

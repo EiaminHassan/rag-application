@@ -8,7 +8,7 @@ from app.config.settings import Settings, VECTORSTORE_DIR
 from app.embeddings.embedder import Embedder
 from app.ingestion.chunking import chunk_text
 from app.ingestion.pdf_loader import extract_text_from_pdf
-from app.llm.groq_client import GroqClient
+from app.llm.gemini_client import GeminiClient
 from app.retriever.retriever import Retriever
 from app.vectorstore.faiss_store import FaissStore
 
@@ -21,7 +21,7 @@ class RAGPipeline:
         self.embedder = Embedder(self.settings.embedding_model_name)
         self.store = FaissStore(index_dir or VECTORSTORE_DIR)
         self.retriever = Retriever(self.embedder, self.store, top_k=self.settings.top_k)
-        self.llm = GroqClient(api_key=self.settings.groq_api_key, model=self.settings.groq_model)
+        self.llm = GeminiClient(api_key=self.settings.gemini_api_key, model=self.settings.gemini_model)
 
     def ingest_pdfs(self, pdf_paths: list[str | Path]) -> int:
         docs: list[dict] = []
