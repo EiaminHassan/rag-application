@@ -1,0 +1,9 @@
+streamlit
+groq
+sentence-transformers
+faiss-cpu
+numpy
+pypdf2
+pdfplumber
+python-dotenv
+pytest
