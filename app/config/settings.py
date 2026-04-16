@@ -16,6 +16,11 @@ DATA_PROCESSED_DIR = BASE_DIR / "data" / "processed"
 VECTORSTORE_DIR = BASE_DIR / "vectorstore" / "faiss_index"
 
 
+def _clean_env(value: str) -> str:
+    """Trim whitespace and optional wrapping quotes from env values."""
+    return value.strip().strip("\"'")
+
+
 @dataclass(frozen=True)
 class Settings:
     """Runtime configuration values."""
@@ -32,13 +37,13 @@ class Settings:
     def from_env(cls) -> "Settings":
         """Build settings from environment variables."""
         return cls(
-            groq_api_key=os.getenv("GROQ_API_KEY", "").strip(),
-            groq_model=os.getenv("GROQ_MODEL", "llama3-8b-8192").strip(),
-            fallback_model=os.getenv("GROQ_FALLBACK_MODEL", "mixtral-8x7b-32768").strip(),
-            embedding_model_name=os.getenv(
+            groq_api_key=_clean_env(os.getenv("GROQ_API_KEY", "")),
+            groq_model=_clean_env(os.getenv("GROQ_MODEL", "llama3-8b-8192")),
+            fallback_model=_clean_env(os.getenv("GROQ_FALLBACK_MODEL", "mixtral-8x7b-32768")),
+            embedding_model_name=_clean_env(os.getenv(
                 "EMBEDDING_MODEL_NAME",
                 "sentence-transformers/all-MiniLM-L6-v2",
-            ).strip(),
+            )),
             chunk_size=int(os.getenv("CHUNK_SIZE", "1000")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "200")),
             top_k=int(os.getenv("TOP_K", "4")),

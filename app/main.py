@@ -14,7 +14,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from app.config.settings import DATA_RAW_DIR
+from app.config.settings import DATA_RAW_DIR, Settings
+from app.llm.groq_client import validate_groq_api_key
 from app.pipeline.rag_pipeline import RAGPipeline
 
 
@@ -32,16 +33,37 @@ def save_uploaded_files(uploaded_files: list) -> list[Path]:
     return file_paths
 
 
-if "pipeline" not in st.session_state:
-    st.session_state.pipeline = RAGPipeline()
+settings = Settings.from_env()
 
-pipeline: RAGPipeline = st.session_state.pipeline
+if "groq_key_status" not in st.session_state:
+    st.session_state.groq_key_status = validate_groq_api_key(settings.groq_api_key)
+
+if "pipeline" not in st.session_state:
+    try:
+        st.session_state.pipeline = RAGPipeline(settings=settings)
+    except Exception as exc:
+        st.session_state.pipeline = None
+        st.session_state.pipeline_error = str(exc)
+
+pipeline: RAGPipeline | None = st.session_state.pipeline
+is_key_valid, key_message = st.session_state.groq_key_status
 
 with st.sidebar:
+    st.subheader("Groq API Status")
+    if is_key_valid:
+        st.success(key_message)
+    else:
+        st.error(key_message)
+        st.caption("Tip: update .env with a valid key, then restart Streamlit.")
+
     st.header("Ingestion")
     uploaded = st.file_uploader("Upload PDFs", type=["pdf"], accept_multiple_files=True)
     if st.button("Build / Rebuild Index", use_container_width=True):
-        if not uploaded:
+        if pipeline is None:
+            st.error("Pipeline failed to initialize. Check your .env configuration.")
+            if "pipeline_error" in st.session_state:
+                st.caption(st.session_state.pipeline_error)
+        elif not uploaded:
             st.warning("Please upload at least one PDF first.")
         else:
             with st.spinner("Processing PDFs and building index..."):
@@ -50,18 +72,31 @@ with st.sidebar:
             st.success(f"Indexed {count} chunks.")
 
     if st.button("Load Existing Index", use_container_width=True):
-        try:
-            pipeline.load_index()
-            st.success("Loaded existing FAISS index.")
-        except FileNotFoundError:
-            st.error("No persisted index found. Build one first.")
+        if pipeline is None:
+            st.error("Pipeline failed to initialize. Check your .env configuration.")
+            if "pipeline_error" in st.session_state:
+                st.caption(st.session_state.pipeline_error)
+        elif not is_key_valid:
+            st.error("Cannot proceed: GROQ_API_KEY is missing/invalid.")
+        else:
+            try:
+                pipeline.load_index()
+                st.success("Loaded existing FAISS index.")
+            except FileNotFoundError:
+                st.error("No persisted index found. Build one first.")
 
 st.subheader("Ask a question")
 question = st.text_input("Question", placeholder="What does the document say about ...?")
 
-if st.button("Get Answer", type="primary"):
+if st.button("Get Answer", type="primary", disabled=not is_key_valid):
     if not question.strip():
         st.warning("Please enter a question.")
+    elif not is_key_valid:
+        st.error("GROQ_API_KEY is missing/invalid. Fix .env and restart Streamlit.")
+    elif pipeline is None:
+        st.error("Pipeline failed to initialize. Check your .env configuration.")
+        if "pipeline_error" in st.session_state:
+            st.caption(st.session_state.pipeline_error)
     else:
         try:
             result = pipeline.answer(question.strip())

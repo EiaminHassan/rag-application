@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Tuple
+
 from groq import Groq
 
 
@@ -28,4 +30,21 @@ class GroqClient:
             temperature=0.2,
         )
         return response.choices[0].message.content or ""
+
+
+def validate_groq_api_key(api_key: str) -> Tuple[bool, str]:
+    """
+    Validate Groq API key with format and a lightweight API call.
+    """
+    key = (api_key or "").strip().strip("\"'")
+    if not key:
+        return False, "Missing GROQ_API_KEY. Add it to .env and restart Streamlit."
+    if not key.startswith("gsk_"):
+        return False, "GROQ_API_KEY format looks invalid (expected to start with 'gsk_')."
+    try:
+        client = Groq(api_key=key)
+        client.models.list()
+    except Exception as exc:  # pragma: no cover - network/auth dependent
+        return False, f"Invalid GROQ_API_KEY or Groq authentication failed: {exc}"
+    return True, "Groq API key is valid."
 
